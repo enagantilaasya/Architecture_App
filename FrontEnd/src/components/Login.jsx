@@ -10,52 +10,47 @@ import {
   errorClass,
   mutedText,
   linkClass,
-  loadingClass,
+  loadingClass
 } from "../styles/common";
 import { NavLink, useNavigate, useLocation } from "react-router";
-import { useAuth } from "../store/authStore";
-import { useEffect } from "react";
-import {toast} from 'react-hot-toast'
+import { useAuth } from "../stores/authStore";
+import { useEffect } from "react"
 
 function Login() {
+   const navigate = useNavigate(); 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const navigate = useNavigate();
-  //get state from auth store
-  const { login, currentUser, loading, error, isAuthenticated } = useAuth((state) => state);
-  //on user login
+  const {login,currentUser,loading,error,isAuthenticated}=useAuth((state)=>state)
+
   const onUserLogin = (userCredObj) => {
     //call login() of auth store
-    login(userCredObj);
-  };
-
-  useEffect(() => {
-    //navigation logic
-    if (isAuthenticated === true) {
-      if (currentUser.role === "USER") {
-        //show cuccess toast
-        toast.success("Login success and redirecting to User Profile",{duration:2000})
-        navigate("/user-profile");
-      }
-      if (currentUser.role === "AUTHOR") {
-         toast.success("Login success and redirecting to Author Profile",{duration:2000})
-        navigate("/author-profile");
-      }
-      if (currentUser.role === "ADMIN") {
-         toast.success("Login success and redirecting to Admin Profile",{duration:2000})
-        navigate("/admin-profile");
-      }
-    }
-  }, [isAuthenticated]);
-
-  //deal with loading
-  if (loading) {
-    return <p className={loadingClass}>Loading....</p>;
+login(userCredObj)
   }
+console.log("current user ",currentUser)
+useEffect(()=>{
+  //navigation logic
+if(isAuthenticated===true) {
+  if(currentUser.role==="USER"){
+    navigate("/user-profile");
+  }
+  if(currentUser.role==="AUTHOR"){
+    navigate("/author-profile");
+  }
+  if(currentUser.role==="ADMIN"){
+    navigate("/admin-profile");
+  }
+}
+},[isAuthenticated])
+console.log(isAuthenticated,currentUser);
+
+//deal with loading
+if(loading) {
+  return <p className={loadingClass}>Loading...</p>;
+}
 
   return (
     <div className={`${pageBackground} flex items-center justify-center py-16 px-4`}>
@@ -64,7 +59,7 @@ function Login() {
         <h2 className={formTitle}>Sign In</h2>
 
         {/* API error */}
-        {error && <p className={errorClass}>{error}</p>}
+         {error && <p className={errorClass}>{error}</p>} 
 
         <form onSubmit={handleSubmit(onUserLogin)}>
           {/* Email */}
@@ -96,6 +91,13 @@ function Login() {
               })}
             />
             {errors.password && <p className={errorClass}>{errors.password.message}</p>}
+          </div>
+
+          {/* Forgot password */}
+          <div className="text-right -mt-2 mb-4">
+            <a href="/forgot-password" className={`${linkClass} text-xs`}>
+              Forgot password?
+            </a>
           </div>
 
           {/* Submit */}

@@ -1,8 +1,10 @@
 import { useParams, useLocation, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../store/authStore";
-import { articlePageWrapper,
+import { useAuth } from "../stores/authStore";
+import { useForm } from "react-hook-form";
+import {
+  articlePageWrapper,
   articleHeader,
   articleCategory,
   articleMainTitle,
@@ -24,42 +26,34 @@ import { articlePageWrapper,
   commentUser,
   commentTime,
   commentText,
-} from "../styles/common";
-import { useForm } from "react-hook-form";
-const API = import.meta.env.VITE_API_URL;
-
+} from "../styles/common.jsx";
 function ArticleByID() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { register, handleSubmit } = useForm();
-
   const user = useAuth((state) => state.currentUser);
-  console.log("user ",user)
-
   const [article, setArticle] = useState(location.state || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  // BASE URL
+  const BASE_URL = import.meta.env.VITE_API_URL || "https://architecture-app-1.onrender.com";
   useEffect(() => {
-    //if aticle is transferred, then use it
     if (article) return;
-
-    //otherwise, make api req to read that article by id
     const getArticle = async () => {
       setLoading(true);
-
       try {
-        const res = await axios.get(`${API}/user-api/articles/${id}`, { withCredentials: true });
-
+        const res = await axios.get(
+          `${BASE_URL}/user-api/article/${id}`,
+          { withCredentials: true }
+        );
         setArticle(res.data.payload);
       } catch (err) {
-        setError(err.response?.data?.error);
+        setError(err.response?.data?.error || "Failed to load article");
       } finally {
         setLoading(false);
       }
     };
-
     getArticle();
   }, [id]);
 
@@ -71,95 +65,67 @@ function ArticleByID() {
     });
   };
 
-  // delete & restore article
+  // Delete / Restore
   const toggleArticleStatus = async () => {
     const newStatus = !article.isArticleActive;
-
-    const confirmMsg = newStatus ? "Restore this article?" : "Delete this article?";
-    if (!window.confirm(confirmMsg)) return;
-
+    if (!window.confirm(newStatus ? "Restore this article?" : "Delete this article?")) return;
     try {
       const res = await axios.patch(
-        "${API}/author-api/articles",
+        `${BASE_URL}/author-api/articles`,
         { articleId: article._id, isArticleActive: newStatus },
-        { withCredentials: true },
+        { withCredentials: true }
       );
-
-      console.log("SUCCESS:", res.data);
-
       setArticle(res.data.payload);
-
-      //  toast.success(res.data.message);
     } catch (err) {
-      console.log("ERROR:", err.response);
-
-      const msg = err.response?.data?.message;
-
-      if (err.response?.status === 400) {
-        toast(msg); // already deleted/active case
-      } else {
-        setError(msg || "Operation failed");
-      }
+      setError(err.response?.data?.message || "Operation failed");
     }
   };
 
-  //edit article
+  //Edit
   const editArticle = (articleObj) => {
     navigate("/edit-article", { state: articleObj });
   };
 
-  //post comment by user
+  // Add comment
   const addComment = async (commentObj) => {
-    //{comment:"user comment"}
-    //add artcileId
     commentObj.articleId = article._id;
-    console.log(commentObj);
-    let res = await axios.put(`${API}/user-api/articles`, commentObj, { withCredentials: true });
-    if (res.status === 200) {
-      
-      setArticle(res.data.payload);
+    try {
+      const res = await axios.put(
+        `${BASE_URL}/user-api/articles`,
+        commentObj,
+        { withCredentials: true }
+      );
+      if (res.status === 200) {
+        setArticle(res.data.payload);
+      }
+    } catch (err) {
+      setError("Failed to add comment");
     }
   };
-
- // console.log("article",article)
-
-
   if (loading) return <p className={loadingClass}>Loading article...</p>;
   if (error) return <p className={errorClass}>{error}</p>;
   if (!article) return null;
-
   return (
     <div className={articlePageWrapper}>
-      {/* Header */}
       <div className={articleHeader}>
         <span className={articleCategory}>{article.category}</span>
-
         <h1 className={`${articleMainTitle} uppercase`}>{article.title}</h1>
-
         <div className={articleAuthorRow}>
           <div className={authorInfo}>✍️ {user?.role}</div>
-
           <div>{formatDate(article.createdAt)}</div>
         </div>
       </div>
-
-      {/* Content */}
       <div className={articleContent}>{article.content}</div>
-
-      {/* AUTHOR actions */}
       {user?.role === "AUTHOR" && (
         <div className={articleActions}>
           <button className={editBtn} onClick={() => editArticle(article)}>
             Edit
           </button>
-
           <button className={deleteBtn} onClick={toggleArticleStatus}>
             {article.isArticleActive ? "Delete" : "Restore"}
           </button>
         </div>
       )}
-      {/* form to add comment if role is USER */}
-      {/* USER actions */}
       {user?.role === "USER" && (
         <div className={articleActions}>
           <form onSubmit={handleSubmit(addComment)}>
@@ -169,54 +135,42 @@ function ArticleByID() {
               className={inputClass}
               placeholder="Write your comment here..."
             />
-            <button type="submit" className="bg-amber-600 text-white px-5 py-2 rounded-2xl mt-5">
+            <button className="bg-amber-600 text-white px-5 py-2 rounded-2xl mt-5">
               Add comment
             </button>
           </form>
         </div>
       )}
-
-      {/* comments */}
-      {/* Comments */}
       <div className={commentsWrapper}>
-        {article.comments?.length === 0 && <p className="text-[#a1a1a6] text-sm text-center">No comments yet</p>}
-
+        {article.comments?.length === 0 && (
+          <p className="text-[#a1a1a6] text-sm text-center">No comments yet</p>
+        )}
         {article.comments?.map((commentObj, index) => {
           const name = commentObj.user?.email || "User";
           const firstLetter = name.charAt(0).toUpperCase();
-
           return (
             <div key={index} className={commentCard}>
-              {/* Header */}
               <div className={commentHeader}>
                 <div className={commentUserRow}>
                   <div className={avatar}>{firstLetter}</div>
-
                   <div>
                     <p className={commentUser}>{name}</p>
-                    <p className={commentTime}>{formatDate(commentObj.createdAt || new Date())}</p>
+                    <p className={commentTime}>
+                      {formatDate(commentObj.createdAt || new Date())}
+                    </p>
                   </div>
                 </div>
               </div>
-
-              {/* Comment */}
               <p className={commentText}>{commentObj.comment}</p>
             </div>
           );
         })}
       </div>
-
-      {/* Footer */}
-      <div className={articleFooter}>Last updated: {formatDate(article.updatedAt)}</div>
+      <div className={articleFooter}>
+        Last updated: {formatDate(article.updatedAt)}
+      </div>
     </div>
   );
 }
 
 export default ArticleByID;
-
-// {
-//   "user":"6989799b7013502767d3f82b",
-//   "articleId":"6989750220ce5bf826ec4f7e",
-//   "comment":"good article"
-
-// }

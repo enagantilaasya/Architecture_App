@@ -5,16 +5,15 @@ import { userApp } from "./APIs/UserAPI.js";
 import { authorApp } from "./APIs/AuthorAPI.js";
 import { adminApp } from "./APIs/AdminAPI.js";
 import { commonApp } from "./APIs/CommonAPI.js";
-import cookieParser from "cookie-parser";
 import cors from 'cors'
+import cookieParser from "cookie-parser";
 config();
-
 //create express app
 const app = exp();
 //enable cors
 app.use(cors({
-  origin:true,
-  credentials:true
+  origin: ["http://localhost:5173", "https://blog-app-ivdh.vercel.app"],
+  credentials: true
 }))
 //add cookie parser middeleware
 app.use(cookieParser())
@@ -32,7 +31,7 @@ const connectDB = async () => {
     await connect(process.env.DB_URL);
     console.log("DB server connected");
     //assign port
-    const port = process.env.PORT || 5000;
+    const port = process.env.PORT || 8764;
     app.listen(port, () => console.log(`server listening on ${port}..`));
   } catch (err) {
     console.log("err in db connect", err);

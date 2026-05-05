@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router";
-import { useAuth } from "../store/authStore";
+import { useAuth } from "../stores/authStore";
 
 import {
   articleCardClass,
@@ -15,7 +15,6 @@ import {
   articleStatusActive,
   articleStatusDeleted,
 } from "../styles/common";
-const API = import.meta.env.VITE_API_URL;
 
 function AuthorArticles() {
   const navigate = useNavigate();
@@ -25,7 +24,9 @@ function AuthorArticles() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  console.log("user in author profile", user);
+  //BASE URL
+  const BASE_URL =
+    import.meta.env.VITE_API_URL || "https://architecture-app-1.onrender.com";
 
   useEffect(() => {
     if (!user) return;
@@ -33,24 +34,33 @@ function AuthorArticles() {
     const getAuthorArticles = async () => {
       try {
         setLoading(true);
-        //read articles of current author
-        let res = await axios.get(`${API}/author-api/articles`, { withCredentials: true });
+
+        const res = await axios.get(
+          `${BASE_URL}/author-api/articles`,
+          { withCredentials: true }
+        );
+
         if (res.status === 200) {
-          setArticles(res.data.payload);
+          setArticles(res.data.payload || []);
         }
-        //update articles state
       } catch (err) {
         console.log(err);
-        setError(err.response?.data?.error || "Failed to fetch articles");
+
+        if (err.response?.status === 401) {
+          setError("Please login again");
+        } else {
+          setError("Failed to fetch articles");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     getAuthorArticles();
-  }, [user]);
+  }, [user, BASE_URL]);
 
   const openArticle = (article) => {
+    if (!article?._id) return;
     navigate(`/article/${article._id}`, {
       state: article,
     });
@@ -67,27 +77,38 @@ function AuthorArticles() {
   if (error) return <p className={errorClass}>{error}</p>;
 
   if (articles.length === 0) {
-    return <div className={emptyStateClass}>You haven't published any articles yet.</div>;
+    return (
+      <div className={emptyStateClass}>
+        You haven't published any articles yet.
+      </div>
+    );
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {articles.map((article) => (
-        <div key={article._id} className={`${articleCardClass} relative flex flex-col`}>
+        <div
+          key={article._id}
+          className={`${articleCardClass} relative flex flex-col`}
+        >
           {/* Status Badge */}
-          <span className={article.isArticleActive ? articleStatusActive : articleStatusDeleted}>
+          <span
+            className={
+              article.isArticleActive
+                ? articleStatusActive
+                : articleStatusDeleted
+            }
+          >
             {article.isArticleActive ? "ACTIVE" : "DELETED"}
           </span>
-
           <div className="flex flex-col gap-2">
             <p className={articleMeta}>{article.category}</p>
-
             <p className={articleTitle}>{article.title}</p>
-
-            <p className={articleExcerpt}>{article.content.slice(0, 60)}...</p>
+            <p className={articleExcerpt}>
+              {article.content?.slice(0, 60)}...
+            </p>
           </div>
-
-          <button className={`${ghostBtn} mt-auto pt-4`} onClick={() => openArticle(article)}>
+          <button className={`${ghostBtn} mt-auto pt-4`}onClick={() => openArticle(article)}>
             Read Article →
           </button>
         </div>

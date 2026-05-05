@@ -1,4 +1,4 @@
-import { useAuth } from "../store/authStore";
+import { useAuth } from "../stores/authStore";
 import { Navigate } from "react-router";
 import {toast} from "react-hot-toast";
 

@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import { config } from "dotenv";
 const { verify } = jwt;
 config();
-
 export const verifyToken = (...allowedRoles) => {
   return (req, res, next) => {
     try {
@@ -14,7 +13,6 @@ export const verifyToken = (...allowedRoles) => {
       }
       //validate token(decode the token)
       let decodedToken = verify(token, process.env.SECRET_KEY);
-
       // check the role is same as role in decodedToken
       if (!allowedRoles.includes(decodedToken.role)) {
         return res.status(403).json({ message: "You are not authorized" });
@@ -27,7 +25,6 @@ export const verifyToken = (...allowedRoles) => {
     }
   };
 };
-
 // export const verifyToken = async (req, res, next) => {
 //   try {
 //     //get token from cookie
@@ -38,9 +35,7 @@ export const verifyToken = (...allowedRoles) => {
 //     }
 //     //validate token(decode the token)
 //     let decodedToken = verify(token, process.env.SECRET_KEY);
-
 //     // check the role is same as role in decodedToken
-
 //     //add decoded token
 //     res.user = decodedToken;
 //     next();

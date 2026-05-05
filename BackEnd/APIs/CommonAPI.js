@@ -3,119 +3,95 @@ import { UserModel } from "../models/UserModel.js";
 import { hash, compare } from "bcryptjs";
 import { config } from "dotenv";
 import jwt from "jsonwebtoken";
-import { verifyToken } from "../middlewares/verifyToken.js";
-const { sign } = jwt;
-export const commonApp = exp.Router();
+import { verifyToken } from "../middlewares/VerifyToken.js";
 import { upload } from "../config/multer.js";
 import { uploadToCloudinary } from "../config/cloudinaryUpload.js";
 import cloudinary from "../config/cloudinary.js";
+
+const { sign } = jwt;
+export const commonApp = exp.Router();
 config();
 
-//Route for register
-commonApp.post("/users", upload.single("profileImageUrl"), async (req, res,next) => {
+//REGISTER
+commonApp.post("/users", upload.single("profileImageUrl"), async (req, res) => {
   let cloudinaryResult;
   try {
-    let allowedRoles = ["USER", "AUTHOR"];
-    //get user from req
+    const allowedRoles = ["USER", "AUTHOR"];
     const newUser = req.body;
-    console.log(newUser);
-    console.log(req.file);
-
-    //check role
     if (!allowedRoles.includes(newUser.role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
-
-    //Upload image to cloudinary from memoryStorage
+    const existingUser = await UserModel.findOne({ email: newUser.email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
     if (req.file) {
       cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+      newUser.profileImageUrl = cloudinaryResult.secure_url;
     }
-
-    // console.log("cloudinaryResult", cloudinaryResult);
-    //add CDN link(secure_url) of image to newUserObj
-    newUser.profileImageUrl = cloudinaryResult?.secure_url;
-
-    //run validators manually
-    //hash password and replace plain with hashed one
     newUser.password = await hash(newUser.password, 12);
-
-    //create New user document
     const newUserDoc = new UserModel(newUser);
-
-    //save document
     await newUserDoc.save();
-    //send res
-    res.status(201).json({ message: "User created" });
+    res.status(201).json({ message: "User created successfully" });
   } catch (err) {
-    console.log("err is ", err);
-    //delete image from cloudinary
+    console.log("Registration error:", err);
     if (cloudinaryResult?.public_id) {
       await cloudinary.uploader.destroy(cloudinaryResult.public_id);
     }
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
-//Route for Login(USER, AUTHOR and ADMIN)
+//LOGIN
 commonApp.post("/login", async (req, res) => {
-  //console.log(req.body)
-  //get user cred obj
-  const { email, password } = req.body;
-  //find user by email
-  const user = await UserModel.findOne({ email: email });
-  //if use not found
-  if (!user) {
-    return res.status(400).json({ message: "Invalid email" });
+  try {
+    const { email, password } = req.body;
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email" });
+    }
+    const isMatched = await compare(password, user.password);
+    if (!isMatched) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+    const token = sign(
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        profileImageUrl: user.profileImageUrl,
+      },
+      process.env.SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,       
+      sameSite: "none",   
+    });
+    let userObj = user.toObject();
+    delete userObj.password;
+    res.status(200).json({
+      message: "Login success",
+      payload: userObj,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-  //compare password
-  const isMatched = await compare(password, user.password);
-  //if passwords not matched
-  if (!isMatched) {
-    return res.status(400).json({ message: "Invalid password" });
-  }
-  //create jwt
-  const signedToken = sign(
-    {
-      id: user._id,
-      email: email,
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageUrl: user.profileImageUrl,
-    },
-    process.env.SECRET_KEY,
-    {
-      expiresIn: "1h",
-    },
-  );
-
-  //set token to res header as httpOnly cookie
-  res.cookie("token", signedToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-  });
-  //remove password from user document
-  let userObj = user.toObject();
-  delete userObj.password;
-
-  //send res
-  res.status(200).json({ message: "login success", payload: userObj });
 });
 
-//Route for Logout
+//LOGOUT
 commonApp.get("/logout", (req, res) => {
-  //delete token from cookie storage
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: true,       // ✅ must match login settings
+    sameSite: "none",   // ✅ must match login settings
   });
-  //send res
   res.status(200).json({ message: "Logout success" });
 });
 
-//Page refresh
+//CHECK AUTH
 commonApp.get("/check-auth", verifyToken("USER", "AUTHOR", "ADMIN"), (req, res) => {
   res.status(200).json({
     message: "authenticated",
@@ -123,13 +99,28 @@ commonApp.get("/check-auth", verifyToken("USER", "AUTHOR", "ADMIN"), (req, res) 
   });
 });
 
-//Change password
+//CHANGE PASSWORD
 commonApp.put("/password", verifyToken("USER", "AUTHOR", "ADMIN"), async (req, res) => {
-  //check current password and new password are same
-  //get current password of user/admin/author
-  //check the current password of req and user are not same
-  // hash new password
-  //replace current password of user with hashed new password
-  //save
-  //send res
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        message: "New password cannot be same as current password",
+      });
+    }
+    const user = await UserModel.findById(req.user.id);
+    const isMatch = await compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Current password incorrect",
+      });
+    }
+    user.password = await hash(newPassword, 10);
+    await user.save();
+    res.status(200).json({
+      message: "Password updated successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
