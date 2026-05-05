@@ -57,7 +57,7 @@ let res = await axios.post(
       
       {/* HEADER */}
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+        <h2 className="text-3xl font-bold  from-blue-600 to-purple-600 text-transparent bg-clip-text">
           ✍️ Write New Article
         </h2>
         <p className="text-gray-500 text-sm mt-2">
@@ -131,7 +131,7 @@ let res = await axios.post(
 
           {/* Submit */}
           <button
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition"
+            className="w-full  from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition"
             type="submit"
             disabled={loading}
           >
