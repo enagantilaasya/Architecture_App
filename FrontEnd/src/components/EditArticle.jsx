@@ -14,6 +14,7 @@ import {
   errorClass,
   articlePageWrapper,
 } from "../styles/common";
+  const API = import.meta.env.VITE_API_URL;
 
 function EditArticle() {
   const location = useLocation();
@@ -43,7 +44,7 @@ function EditArticle() {
     //add articleId to modified article
     modifiedArticle.articleId=article._id;
     //make PUT req to update article
-    let res=await axios.put("http://localhost:8764/author-api/articles",
+    let res=await axios.put(`${API}/author-api/articles`,
       modifiedArticle,
       {withCredentials:true})
     //naviagte to articleById component

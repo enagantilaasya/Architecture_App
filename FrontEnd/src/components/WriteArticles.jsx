@@ -15,7 +15,7 @@ import {
   loadingClass,
 } from "../styles/common";
 import { useAuth } from "../store/authStore";
-
+const API = import.meta.env.VITE_API_URL;
 function WriteArticles() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ function WriteArticles() {
       //set loading true
       setLoading(true);
       //make POST req to save new article
-      let res = await axios.post("http://localhost:8764/author-api/article", articleObj, { withCredentials: true });
+      let res = await axios.post(`${API}/author-api/article`, articleObj, { withCredentials: true });
       //navigate to AuthorArticles
       if (res.status === 201) {
         toast.success("Article published successfully")

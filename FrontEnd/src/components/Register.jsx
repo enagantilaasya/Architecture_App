@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { NavLink, useNavigate } from "react-router";
 import { useState } from "react";
 import axios from "axios";
+  const API = import.meta.env.VITE_API_URL;
 
 function Register() {
   const {
@@ -48,7 +49,7 @@ function Register() {
       //start loading
       setLoading(true);
       //make HTTP POST req to create User in backend
-      let res = await axios.post("http://localhost:8764/auth/users", formData,{withCredentials:true});
+      let res = await axios.post(`${API}/auth/users`, formData,{withCredentials:true});
 
       if (res.status === 201) {
         //navigate to Login

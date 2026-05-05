@@ -13,6 +13,7 @@ import {
   errorClass,
   timestampClass,
 } from "../styles/common.jsx";
+  const API = import.meta.env.VITE_API_URL;
 
 function UserProfile() {
   const logout = useAuth((state) => state.logout);
@@ -28,7 +29,7 @@ function UserProfile() {
       setLoading(true);
       try {
         //read articles of all authors
-        let res=await axios.get("http://localhost:8764/user-api/articles",{withCredentials:true})
+        let res=await axios.get(`${API}/user-api/articles`,{withCredentials:true})
         //update articles state
         if(res.status===200){
           setArticles((await res).data.payload)

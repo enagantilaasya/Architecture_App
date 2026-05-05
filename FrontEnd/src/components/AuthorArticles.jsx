@@ -15,6 +15,7 @@ import {
   articleStatusActive,
   articleStatusDeleted,
 } from "../styles/common";
+const API = import.meta.env.VITE_API_URL;
 
 function AuthorArticles() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ function AuthorArticles() {
       try {
         setLoading(true);
         //read articles of current author
-        let res = await axios.get(" http://localhost:8764/author-api/articles", { withCredentials: true });
+        let res = await axios.get(`${API}/author-api/articles`, { withCredentials: true });
         if (res.status === 200) {
           setArticles(res.data.payload);
         }
