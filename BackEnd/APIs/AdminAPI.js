@@ -1,5 +1,5 @@
 import exp from 'express'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { UserModel } from '../models/UserModel.js'
 export const adminApp = exp.Router()
