@@ -12,7 +12,7 @@ config();
 const app = exp();
 //enable cors
 app.use(cors({
-  origin: ["http://localhost:5173", "https://architecture-app-pied.vercel.app"],
+  origin: ["http://localhost:5173", "https://architecture-app-pied.vercel.app", ],
   credentials: true
 }))
 //add cookie parser middeleware
