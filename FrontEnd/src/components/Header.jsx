@@ -1,5 +1,6 @@
 import { NavLink } from "react-router";
 import { useAuth } from "../stores/authStore";
+import blog from "./blog.png"
 function Header() {
   const isAuthenticated = useAuth((state) => state.isAuthenticated);
   const user = useAuth((state) => state.currentUser);
@@ -19,15 +20,21 @@ function Header() {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
+        <div className="flex justify-around">
         {/* LOGO */}
+        <img
+                  src={blog}
+                  alt="img not available"
+                  className="text-2xl font-bold text-indigo-600 size-11 rounded-2xl"
+                />
         <NavLink
           to="/"
-          className="text-2xl font-bold text-indigo-600 tracking-wide"
+          className="text-2xl font-bold text-indigo-600 tracking-wide pl-4 "
         >
-          MyBlog
+            MyBlog
         </NavLink>
-
+        
+        </div>
         {/* NAV LINKS */}
         <ul className="flex items-center gap-6 text-sm font-medium">
 
