@@ -10,15 +10,15 @@ function Footer() {
 
         {/* RIGHT LINKS */}
         <div className="flex gap-4 text-sm">
-          <a href="/" className="text-[#0066cc] hover:underline">
-            Home
-          </a>
-          <a href="/articles" className="text-[#0066cc] hover:underline">
-            Articles
-          </a>
-          <a href="/authors" className="text-[#0066cc] hover:underline">
-            Authors
-          </a>
+          <h1 className="text-[#0066cc]">
+            HelpLine :
+          </h1>
+          <h1 className="text-[#0066cc] ">
+            23466777878,
+          </h1>
+          <h1 className="text-[#0066cc] ">
+            8725372512
+          </h1>
         </div>
       </div>
     </footer>
