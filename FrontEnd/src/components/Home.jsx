@@ -1,5 +1,5 @@
 import { NavLink } from "react-router"
-
+import image from "./image.png";
 function Home() {
   return (
     <div>
@@ -8,7 +8,7 @@ function Home() {
       <div className="relative w-screen h-screen overflow-hidden -mx-32">
 
         <img
-          src="/src/image.png"
+          src={image}
           alt="img not available"
           className="w-full h-full object-cover"
         />
