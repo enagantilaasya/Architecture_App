@@ -131,7 +131,7 @@ let res = await axios.post(
 
           {/* Submit */}
           <button
-            className="w-full  from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition"
+            className="w-full bg-blue-300 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition"
             type="submit"
             disabled={loading}
           >
